@@ -22,7 +22,7 @@ interface AuthState {
   logout: () => void
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useAuthStore = create<AuthState>((set) => ({
   farmer: null,
   isAuthenticated: !!localStorage.getItem('accessToken'),
   isLoading: true,

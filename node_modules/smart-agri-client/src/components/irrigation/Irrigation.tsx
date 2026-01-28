@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { irrigationAPI, farmsAPI } from '../../services/api'
-import { CloudIcon, PlayIcon, StopIcon, ClockIcon } from '@heroicons/react/24/outline'
+import { PlayIcon, ClockIcon } from '@heroicons/react/24/outline'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
 

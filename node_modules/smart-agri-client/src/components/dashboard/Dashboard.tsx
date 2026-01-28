@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { farmsAPI, cropsAPI, irrigationAPI, notificationsAPI } from '../../services/api'
+import { farmsAPI, cropsAPI, notificationsAPI } from '../../services/api'
 import {
   MapIcon,
   BeakerIcon,

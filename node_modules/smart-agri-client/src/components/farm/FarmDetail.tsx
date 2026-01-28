@@ -3,13 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { useFarmStore } from '../../store/farmStore'
 import { farmsAPI, cropsAPI } from '../../services/api'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
-import {
-  MapPinIcon,
-  CloudIcon,
-  SunIcon,
-  BeakerIcon,
-  ChevronLeftIcon,
-} from '@heroicons/react/24/outline'
+import { MapPinIcon, SunIcon, BeakerIcon, ChevronLeftIcon } from '@heroicons/react/24/outline'
 import clsx from 'clsx'
 import 'leaflet/dist/leaflet.css'
 

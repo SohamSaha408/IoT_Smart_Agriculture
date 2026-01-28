@@ -55,7 +55,7 @@ export default function Notifications() {
     }
   }
 
-  const getTypeIcon = (type: string, priority: string) => {
+  const getTypeIcon = (priority: string) => {
     const iconClass = clsx(
       'w-5 h-5',
       priority === 'critical' ? 'text-red-600' :
@@ -147,7 +147,7 @@ export default function Notifications() {
                   'p-2 rounded-lg flex-shrink-0',
                   getTypeBgColor(notification.priority)
                 )}>
-                  {getTypeIcon(notification.type, notification.priority)}
+                  {getTypeIcon(notification.priority)}
                 </div>
                 <div className="ml-4 flex-1">
                   <div className="flex items-start justify-between">

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { fertilizationAPI, farmsAPI } from '../../services/api'
 import { BeakerIcon, CheckIcon } from '@heroicons/react/24/outline'
 import clsx from 'clsx'
-import toast from 'react-hot-toast'
 
 export default function Fertilization() {
   const [farms, setFarms] = useState<any[]>([])

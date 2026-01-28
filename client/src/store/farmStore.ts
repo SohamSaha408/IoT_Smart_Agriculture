@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { farmsAPI, cropsAPI } from '../services/api'
+import { farmsAPI } from '../services/api'
 
 interface Farm {
   id: string
@@ -30,7 +30,7 @@ interface FarmState {
   setSelectedFarm: (farm: Farm | null) => void
 }
 
-export const useFarmStore = create<FarmState>((set, get) => ({
+export const useFarmStore = create<FarmState>((set) => ({
   farms: [],
   selectedFarm: null,
   isLoading: false,

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { cropsAPI, farmsAPI } from '../../services/api'
 import { BeakerIcon, PlusIcon } from '@heroicons/react/24/outline'
 import clsx from 'clsx'
-import toast from 'react-hot-toast'
 
 export default function Crops() {
   const [farms, setFarms] = useState<any[]>([])
