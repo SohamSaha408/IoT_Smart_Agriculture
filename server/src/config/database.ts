@@ -17,6 +17,16 @@ export const sequelize = new Sequelize(
   {
     dialect: 'postgres',
     logging: isProduction ? false : console.log,
+    // Most managed Postgres providers (Neon/Supabase/Railway/etc.) require SSL in production.
+    // This makes the connection resilient even if the URL does not include `?sslmode=require`.
+    dialectOptions: isProduction
+      ? {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false,
+          },
+        }
+      : undefined,
     pool: {
       max: 10,
       min: 0,

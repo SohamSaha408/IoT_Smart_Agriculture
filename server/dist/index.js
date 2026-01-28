@@ -79,10 +79,13 @@ const startServer = async () => {
         // Test database connection
         await database_1.sequelize.authenticate();
         console.log('Database connection established successfully.');
-        // Sync models (in development only)
-        if (process.env.NODE_ENV === 'development') {
+        // IMPORTANT:
+        // Do NOT auto-run `sync({ alter: true })` in hosted/prod environments.
+        // It can generate unsafe/invalid ALTER statements and break startup.
+        // If you really want this for local dev, set ENABLE_DB_SYNC=true explicitly.
+        if (process.env.NODE_ENV === 'development' && process.env.ENABLE_DB_SYNC === 'true') {
             await database_1.sequelize.sync({ alter: true });
-            console.log('Database models synchronized.');
+            console.log('Database models synchronized (alter).');
         }
         // Initialize MQTT client
         (0, mqtt_1.initMQTT)();

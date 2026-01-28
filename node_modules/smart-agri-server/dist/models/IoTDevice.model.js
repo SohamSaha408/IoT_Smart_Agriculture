@@ -26,7 +26,6 @@ IoTDevice.init({
     deviceId: {
         type: sequelize_1.DataTypes.STRING(100),
         allowNull: false,
-        unique: true,
         comment: 'Hardware device ID (MAC address or serial)'
     },
     name: {
