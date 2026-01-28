@@ -68,6 +68,7 @@ app.use('/api/notifications', notificationRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
+  console.warn(`[404] Route not found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({ error: 'Route not found' });
 });
 
