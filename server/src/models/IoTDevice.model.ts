@@ -63,7 +63,6 @@ IoTDevice.init(
     deviceId: {
       type: DataTypes.STRING(100),
       allowNull: false,
-      unique: true,
       comment: 'Hardware device ID (MAC address or serial)'
     },
     name: {
