@@ -253,7 +253,8 @@ export const createFertilizationRecord = async (
 ): Promise<FertilizationRecord> => {
   const record = await FertilizationRecord.create({
     cropId,
-    fertilizerType: fertilizerType,
+    // Model field is currently named `fertilzerType` (typo) – keep runtime/db consistent.
+    fertilzerType: fertilizerType,
     quantityKg,
     npkRatio,
     recommendedDate,
@@ -301,7 +302,7 @@ export const markAsApplied = async (
       type: 'fertilization',
       priority: 'low',
       title: 'Fertilization Applied',
-      message: `${record.fertilizerType} applied to ${crop.cropType} (${actualQuantityKg}kg)`,
+      message: `${record.fertilzerType} applied to ${crop.cropType} (${actualQuantityKg}kg)`,
       channels: ['in_app']
     });
   }

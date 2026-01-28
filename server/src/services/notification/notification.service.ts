@@ -2,6 +2,7 @@ import twilio from 'twilio';
 import sgMail from '@sendgrid/mail';
 import { Notification, Farmer } from '../../models';
 import { Op } from 'sequelize';
+import type { NotificationChannel } from '../../models/Notification.model';
 
 // Initialize Twilio
 const twilioClient = process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
@@ -123,7 +124,7 @@ export const createNotification = async (
   const farmer = await Farmer.findByPk(farmerId);
 
   if (farmer) {
-    const sentVia: string[] = ['in_app'];
+    const sentVia: NotificationChannel[] = ['in_app'];
 
     // Send SMS if requested
     if (channels.includes('sms')) {

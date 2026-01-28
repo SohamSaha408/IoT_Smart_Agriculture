@@ -96,7 +96,8 @@ export const optionalAuth = async (
 
 export const generateToken = (farmer: { id: string; phone: string }): string => {
   const secret = process.env.JWT_SECRET || 'default-secret';
-  const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
+  // jsonwebtoken v9 uses a stricter type for expiresIn; env vars are plain strings.
+  const expiresIn = (process.env.JWT_EXPIRES_IN || '7d') as jwt.SignOptions['expiresIn'];
 
   return jwt.sign(
     { id: farmer.id, phone: farmer.phone },
@@ -107,7 +108,7 @@ export const generateToken = (farmer: { id: string; phone: string }): string => 
 
 export const generateRefreshToken = (farmer: { id: string; phone: string }): string => {
   const secret = process.env.JWT_SECRET || 'default-secret';
-  const expiresIn = process.env.JWT_REFRESH_EXPIRES_IN || '30d';
+  const expiresIn = (process.env.JWT_REFRESH_EXPIRES_IN || '30d') as jwt.SignOptions['expiresIn'];
 
   return jwt.sign(
     { id: farmer.id, phone: farmer.phone, type: 'refresh' },
