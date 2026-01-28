@@ -1,4 +1,5 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
+import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -57,11 +58,6 @@ app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Root endpoint
-app.get('/', (req: Request, res: Response) => {
-  res.json({ message: 'Smart Agri Server is running. API is available at /api' });
-});
-
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/farms', farmRoutes);
@@ -71,10 +67,19 @@ app.use('/api/fertilization', fertilizationRoutes);
 app.use('/api/devices', deviceRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// 404 handler
-app.use((req: Request, res: Response) => {
-  console.warn(`[404] Route not found: ${req.method} ${req.originalUrl}`);
+// API 404 handler (Catch missing API routes first)
+app.use('/api/*', (req: Request, res: Response) => {
+  console.warn(`[404] API Route not found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({ error: 'Route not found' });
+});
+
+// Serve static files from the React client
+const clientBuildPath = path.join(__dirname, '../../client/dist');
+app.use(express.static(clientBuildPath));
+
+// Handle React routing, return all unknown requests to React app
+app.get('*', (req: Request, res: Response) => {
+  res.sendFile(path.join(clientBuildPath, 'index.html'));
 });
 
 // Global error handler
