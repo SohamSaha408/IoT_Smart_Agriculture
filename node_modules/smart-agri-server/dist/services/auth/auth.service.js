@@ -3,10 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.changePassword = exports.updateFarmerProfile = exports.getFarmerProfile = exports.login = exports.register = void 0;
+exports.verifyOTP = exports.sendOTP = exports.changePassword = exports.updateFarmerProfile = exports.getFarmerProfile = exports.login = exports.register = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const models_1 = require("../../models");
 const auth_middleware_1 = require("../../middleware/auth.middleware");
+const twilio_1 = __importDefault(require("twilio"));
+const crypto_1 = require("crypto");
 // Normalize phone number to include country code
 const normalizePhone = (phone) => {
     // Remove all non-digit characters except +
@@ -21,6 +23,16 @@ const normalizePhone = (phone) => {
         }
     }
     return normalized;
+};
+const twilioClient = process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
+    ? (0, twilio_1.default)(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
+    : null;
+const generateNumericOtp = (length) => {
+    let otp = '';
+    for (let i = 0; i < length; i++) {
+        otp += Math.floor(Math.random() * 10).toString();
+    }
+    return otp;
 };
 // Register new farmer
 const register = async (phone, password, name) => {
@@ -184,4 +196,113 @@ const changePassword = async (farmerId, currentPassword, newPassword) => {
     }
 };
 exports.changePassword = changePassword;
+// Send OTP for phone-based login
+const sendOTP = async (phone) => {
+    try {
+        const normalizedPhone = normalizePhone(phone);
+        if (!/^\+91[0-9]{10}$/.test(normalizedPhone)) {
+            return {
+                success: false,
+                message: 'Invalid phone number format. Please provide a valid 10-digit Indian mobile number.',
+            };
+        }
+        const otpLength = parseInt(process.env.OTP_LENGTH || '6');
+        const expiryMinutes = parseInt(process.env.OTP_EXPIRY_MINUTES || '5');
+        const otp = generateNumericOtp(otpLength);
+        const expiresAt = new Date(Date.now() + expiryMinutes * 60 * 1000);
+        // Invalidate previous unused OTPs for this phone (simple approach)
+        await models_1.OTP.update({ isUsed: true }, { where: { phone: normalizedPhone, isUsed: false } });
+        await models_1.OTP.create({
+            phone: normalizedPhone,
+            otp,
+            expiresAt,
+            isUsed: false,
+            attempts: 0,
+        });
+        const smsBody = `Your Smart Agri OTP is ${otp}. It expires in ${expiryMinutes} minutes.`;
+        if (process.env.NODE_ENV === 'production') {
+            if (!twilioClient || !process.env.TWILIO_PHONE_NUMBER) {
+                return {
+                    success: false,
+                    message: 'SMS provider not configured.',
+                };
+            }
+            await twilioClient.messages.create({
+                to: normalizedPhone,
+                from: process.env.TWILIO_PHONE_NUMBER,
+                body: smsBody,
+            });
+        }
+        else {
+            console.log(`[DEV OTP] ${normalizedPhone} -> ${otp}`);
+        }
+        return { success: true, message: 'OTP sent successfully' };
+    }
+    catch (error) {
+        console.error('Send OTP error:', error);
+        return { success: false, message: 'Failed to send OTP' };
+    }
+};
+exports.sendOTP = sendOTP;
+// Verify OTP and issue tokens
+const verifyOTP = async (phone, otp) => {
+    try {
+        const normalizedPhone = normalizePhone(phone);
+        if (!/^\+91[0-9]{10}$/.test(normalizedPhone)) {
+            return {
+                success: false,
+                message: 'Invalid phone number format.',
+            };
+        }
+        const record = await models_1.OTP.findOne({
+            where: { phone: normalizedPhone, isUsed: false },
+            order: [['createdAt', 'DESC']],
+        });
+        if (!record) {
+            return { success: false, message: 'OTP not found. Please request a new OTP.' };
+        }
+        // Track attempts
+        await record.update({ attempts: record.attempts + 1 });
+        if (record.isExpired()) {
+            await record.update({ isUsed: true });
+            return { success: false, message: 'OTP expired. Please request a new OTP.' };
+        }
+        if (!record.isValid(otp)) {
+            return { success: false, message: 'Invalid OTP.' };
+        }
+        await record.update({ isUsed: true });
+        // Find or create farmer (OTP-first signup)
+        let farmer = await models_1.Farmer.findOne({ where: { phone: normalizedPhone } });
+        if (!farmer) {
+            const randomPassword = (0, crypto_1.randomBytes)(24).toString('hex');
+            const hashedPassword = await bcryptjs_1.default.hash(randomPassword, 10);
+            farmer = await models_1.Farmer.create({
+                phone: normalizedPhone,
+                password: hashedPassword,
+                isVerified: true,
+            });
+        }
+        await farmer.update({ isVerified: true, lastLoginAt: new Date() });
+        const accessToken = (0, auth_middleware_1.generateToken)({ id: farmer.id, phone: farmer.phone });
+        const refreshToken = (0, auth_middleware_1.generateRefreshToken)({ id: farmer.id, phone: farmer.phone });
+        return {
+            success: true,
+            message: 'Login successful',
+            farmer: {
+                id: farmer.id,
+                phone: farmer.phone,
+                name: farmer.name,
+                email: farmer.email,
+                isVerified: farmer.isVerified,
+            },
+            accessToken,
+            refreshToken,
+        };
+    }
+    catch (error) {
+        console.error('Verify OTP error:', error);
+        return { success: false, message: 'OTP verification failed' };
+    }
+};
+exports.verifyOTP = verifyOTP;
 //# sourceMappingURL=auth.service.js.map

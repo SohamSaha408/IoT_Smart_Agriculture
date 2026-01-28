@@ -6,6 +6,72 @@ import * as authService from '../services/auth/auth.service';
 
 const router = Router();
 
+// Send OTP
+router.post(
+  '/send-otp',
+  validate([
+    body('phone')
+      .notEmpty()
+      .withMessage('Phone number is required')
+      .matches(/^(\+91)?[0-9]{10}$/)
+      .withMessage('Invalid phone number format'),
+  ]),
+  async (req: Request, res: Response) => {
+    try {
+      const { phone } = req.body;
+      const result = await authService.sendOTP(phone);
+
+      if (!result.success) {
+        res.status(400).json({ error: result.message });
+        return;
+      }
+
+      res.json({ message: result.message });
+    } catch (error) {
+      console.error('Send OTP error:', error);
+      res.status(500).json({ error: 'Failed to send OTP' });
+    }
+  },
+);
+
+// Verify OTP
+router.post(
+  '/verify-otp',
+  validate([
+    body('phone')
+      .notEmpty()
+      .withMessage('Phone number is required')
+      .matches(/^(\+91)?[0-9]{10}$/)
+      .withMessage('Invalid phone number format'),
+    body('otp')
+      .notEmpty()
+      .withMessage('OTP is required')
+      .isLength({ min: 4, max: 10 })
+      .withMessage('Invalid OTP'),
+  ]),
+  async (req: Request, res: Response) => {
+    try {
+      const { phone, otp } = req.body;
+      const result = await authService.verifyOTP(phone, otp);
+
+      if (!result.success) {
+        res.status(401).json({ error: result.message });
+        return;
+      }
+
+      res.json({
+        message: result.message,
+        farmer: result.farmer,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+      });
+    } catch (error) {
+      console.error('Verify OTP error:', error);
+      res.status(500).json({ error: 'OTP verification failed' });
+    }
+  },
+);
+
 // Register
 router.post(
   '/register',

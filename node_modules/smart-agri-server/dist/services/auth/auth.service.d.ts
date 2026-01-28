@@ -13,6 +13,17 @@ interface LoginResult {
     accessToken?: string;
     refreshToken?: string;
 }
+interface SendOtpResult {
+    success: boolean;
+    message: string;
+}
+interface VerifyOtpResult {
+    success: boolean;
+    message: string;
+    farmer?: any;
+    accessToken?: string;
+    refreshToken?: string;
+}
 export declare const register: (phone: string, password: string, name?: string) => Promise<RegisterResult>;
 export declare const login: (phone: string, password: string) => Promise<LoginResult>;
 export declare const getFarmerProfile: (farmerId: string) => Promise<Farmer | null>;
@@ -34,5 +45,7 @@ export declare const changePassword: (farmerId: string, currentPassword: string,
     success: boolean;
     message: string;
 }>;
+export declare const sendOTP: (phone: string) => Promise<SendOtpResult>;
+export declare const verifyOTP: (phone: string, otp: string) => Promise<VerifyOtpResult>;
 export {};
 //# sourceMappingURL=auth.service.d.ts.map
