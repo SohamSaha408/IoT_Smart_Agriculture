@@ -37,7 +37,7 @@ interface VerifyOtpResult {
 const normalizePhone = (phone: string): string => {
   // Remove all non-digit characters except +
   let normalized = phone.replace(/[^\d+]/g, '');
-  
+
   // Add India country code if not present
   if (!normalized.startsWith('+')) {
     if (normalized.startsWith('91') && normalized.length === 12) {
@@ -46,7 +46,7 @@ const normalizePhone = (phone: string): string => {
       normalized = '+91' + normalized;
     }
   }
-  
+
   return normalized;
 };
 
@@ -71,7 +71,7 @@ export const register = async (
 ): Promise<RegisterResult> => {
   try {
     const normalizedPhone = normalizePhone(phone);
-    
+
     // Validate phone number format
     if (!/^\+91[0-9]{10}$/.test(normalizedPhone)) {
       return {
@@ -191,7 +191,7 @@ export const getFarmerProfile = async (farmerId: string) => {
   const farmer = await Farmer.findByPk(farmerId, {
     attributes: ['id', 'phone', 'name', 'email', 'address', 'profileImage', 'isVerified', 'createdAt']
   });
-  
+
   return farmer;
 };
 
@@ -201,13 +201,13 @@ export const updateFarmerProfile = async (
   data: { name?: string; email?: string; address?: string; profileImage?: string }
 ) => {
   const farmer = await Farmer.findByPk(farmerId);
-  
+
   if (!farmer) {
     return null;
   }
 
   await farmer.update(data);
-  
+
   return {
     id: farmer.id,
     phone: farmer.phone,
@@ -227,7 +227,7 @@ export const changePassword = async (
 ): Promise<{ success: boolean; message: string }> => {
   try {
     const farmer = await Farmer.findByPk(farmerId);
-    
+
     if (!farmer) {
       return { success: false, message: 'Farmer not found' };
     }
@@ -288,20 +288,23 @@ export const sendOTP = async (phone: string): Promise<SendOtpResult> => {
 
     const smsBody = `Your Smart Agri OTP is ${otp}. It expires in ${expiryMinutes} minutes.`;
 
-    if (process.env.NODE_ENV === 'production') {
-      if (!twilioClient || !process.env.TWILIO_PHONE_NUMBER) {
-        return {
-          success: false,
-          message: 'SMS provider not configured.',
-        };
-      }
-
+    // Send SMS if Twilio is configured
+    if (twilioClient && process.env.TWILIO_PHONE_NUMBER) {
       await twilioClient.messages.create({
         to: normalizedPhone,
         from: process.env.TWILIO_PHONE_NUMBER,
         body: smsBody,
       });
-    } else {
+    } else if (process.env.NODE_ENV === 'production') {
+      // If production and no Twilio, return error
+      return {
+        success: false,
+        message: 'SMS provider not configured.',
+      };
+    }
+
+    // Always log in development for easier debugging
+    if (process.env.NODE_ENV !== 'production') {
       console.log(`[DEV OTP] ${normalizedPhone} -> ${otp}`);
     }
 
