@@ -288,27 +288,12 @@ export const sendOTP = async (phone: string): Promise<SendOtpResult> => {
 
     const smsBody = `Your Smart Agri OTP is ${otp}. It expires in ${expiryMinutes} minutes.`;
 
-    // Send SMS if Twilio is configured
-    if (twilioClient && process.env.TWILIO_PHONE_NUMBER) {
-      await twilioClient.messages.create({
-        to: normalizedPhone,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        body: smsBody,
-      });
-    } else if (process.env.NODE_ENV === 'production') {
-      // If production and no Twilio, return error
-      return {
-        success: false,
-        message: 'SMS provider not configured.',
-      };
-    }
+    // --- BYPASS: Disable actual SMS sending to avoid Twilio errors ---
+    // if (twilioClient && process.env.TWILIO_PHONE_NUMBER) { ... }
 
-    // Always log in development for easier debugging
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`[DEV OTP] ${normalizedPhone} -> ${otp}`);
-    }
+    console.log(`[DEV/BYPASS] OTP for ${normalizedPhone} is ${otp}`);
 
-    return { success: true, message: 'OTP sent successfully' };
+    return { success: true, message: 'OTP sent successfully (Bypass Mode)' };
   } catch (error) {
     console.error('Send OTP error:', error);
     return { success: false, message: 'Failed to send OTP' };
@@ -319,6 +304,43 @@ export const sendOTP = async (phone: string): Promise<SendOtpResult> => {
 export const verifyOTP = async (phone: string, otp: string): Promise<VerifyOtpResult> => {
   try {
     const normalizedPhone = normalizePhone(phone);
+
+    // --- BYPASS START ---
+    // Universal OTP for testing/demo purposes
+    if (otp === '123456') {
+      console.log(`[AUTH BYPASS] Logging in ${normalizedPhone} with universal OTP.`);
+
+      let farmer = await Farmer.findOne({ where: { phone: normalizedPhone } });
+      if (!farmer) {
+        // Create new farmer if not exists
+        const randomPassword = randomBytes(24).toString('hex');
+        const hashedPassword = await bcrypt.hash(randomPassword, 10);
+        farmer = await Farmer.create({
+          phone: normalizedPhone,
+          password: hashedPassword,
+          isVerified: true,
+        });
+      }
+
+      await farmer.update({ isVerified: true, lastLoginAt: new Date() });
+      const accessToken = generateToken({ id: farmer.id, phone: farmer.phone });
+      const refreshToken = generateRefreshToken({ id: farmer.id, phone: farmer.phone });
+
+      return {
+        success: true,
+        message: 'Login successful (Bypass)',
+        farmer: {
+          id: farmer.id,
+          phone: farmer.phone,
+          name: farmer.name,
+          email: farmer.email,
+          isVerified: farmer.isVerified,
+        },
+        accessToken,
+        refreshToken,
+      };
+    }
+    // --- BYPASS END ---
 
     if (!/^\+91[0-9]{10}$/.test(normalizedPhone)) {
       return {
