@@ -27,7 +27,17 @@ const mqtt_1 = require("./config/mqtt");
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3000;
 // Security middleware
-app.use((0, helmet_1.default)());
+app.use((0, helmet_1.default)({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:", "https://*.tile.openstreetmap.org", "https://*.basemaps.cartocdn.com", "https://placehold.co"],
+            connectSrc: ["'self'", "https://api.open-meteo.com"],
+        },
+    },
+}));
 app.use((0, cors_1.default)({
     origin: process.env.NODE_ENV === 'production'
         ? process.env.CLIENT_URL
