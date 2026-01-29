@@ -9,10 +9,15 @@ import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
 // Fix for missing marker icon
+// Fix for missing marker icon
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
 const customIcon = new L.Icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl: markerShadow,
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
@@ -78,6 +83,7 @@ export default function FarmDetail() {
           <div className="h-[400px]">
             {lat && lng ? (
               <MapContainer
+                key={`${lat}-${lng}`}
                 center={[lat, lng]}
                 zoom={15}
                 style={{ height: '100%', width: '100%' }}
